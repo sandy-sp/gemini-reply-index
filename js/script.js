@@ -1,6 +1,6 @@
 // === CONFIGURE these two constants ===
-const OWNER = '<your‑username>';
-const REPO  = 'gemini-prompts';
+const OWNER = 'sandy-sp';
+const REPO  = 'gemini-reply-index';
 // =====================================
 
 async function uploadFile(path, contentBase64, token, message) {
