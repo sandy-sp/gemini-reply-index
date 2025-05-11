@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>OAuth Callback</title>
+</head>
+<body>
+  <script>
+  (async () => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (!code) { document.body.textContent = 'No code in URL'; return; }
+
+    // POST code to your Lambda
+    const res = await fetch('https://api.my-domain.com/exchange_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const { access_token, error_description } = await res.json();
+    if (!access_token) {
+      document.body.textContent = `Error: ${error_description}`;
+      return;
+    }
+    localStorage.setItem('github_token', access_token);
+    window.location.href = './index.html';
+  })();
+  </script>
+</body>
+</html>
