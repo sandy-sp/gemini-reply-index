@@ -1,5 +1,6 @@
 (async () => {
   // ── CONFIG ───────────────────────────────────────────────────────────
+  const CLIENT_ID = 'YOUR_OAUTH_APP_CLIENT_ID'; // Define your OAuth App Client ID
   const OWNER    = 'sandy-sp';
   const REPO     = 'gemini-reply-index';
   const BRANCH   = 'main';
@@ -10,20 +11,23 @@
   let octokit;
 
   // ── TOKEN MANAGEMENT ─────────────────────────────────────────────────
-  function setToken(t) {
-    localStorage.setItem('github_token', t);
-    octokit = new Octokit.Octokit({ auth: t });
-    loadContributions();
+  const token = localStorage.getItem('github_token');
+  if (!token) {
+    // Show login button
+    document.getElementById('login-button').style.display = 'inline-block';
+    document.getElementById('login-button').onclick = () => {
+      const redirect = 
+        `https://github.com/login/oauth/authorize` +
+        `?client_id=${CLIENT_ID}` +
+        `&scope=repo` +
+        `&redirect_uri=${encodeURIComponent(window.location.origin + '/oauth-callback.html')}`;
+      window.location.href = redirect;
+    };
+    // Disable form until logged in
+    document.getElementById('submit-btn').disabled = true;
+    return;
   }
-
-  document.getElementById('token-button')
-    .addEventListener('click', () => {
-      const t = prompt('Enter your GitHub PAT (repo scope):');
-      if (t) setToken(t.trim());
-    });
-
-  const saved = localStorage.getItem('github_token');
-  if (saved) setToken(saved);
+  octokit = new Octokit.Octokit({ auth: token });
 
   // ── HELPERS ──────────────────────────────────────────────────────────
   async function getFile(path) {
@@ -117,5 +121,5 @@
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────
-  if (octokit) loadContributions();
+  loadContributions();
 })();
