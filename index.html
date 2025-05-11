@@ -2,28 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Submit a Prompt + DOCX</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini Reply Index</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@octokit/rest/dist-bundle.umd.min.js"></script>
 </head>
 <body>
-  <h1>Gemini Research Submissions</h1>
-
-  <form id="uploadForm">
-    <label>Your GitHub token:<br/>
-      <input type="password" id="token" placeholder="ghp_…" required>
-    </label><br/><br/>
-
-    <label>Prompt:<br/>
-      <textarea id="prompt" rows="4" cols="50" placeholder="Enter your Gemini prompt…" required></textarea>
-    </label><br/><br/>
-
-    <label>DOCX output:<br/>
-      <input type="file" id="docFile" accept=".docx" required>
-    </label><br/><br/>
-
-    <button type="submit">Submit</button>
-  </form>
-
-  <script src="js/script.js"></script>
+  <header>
+    <h1>Gemini Reply Index</h1>
+    <button id="token-button">Set GitHub Token</button>
+  </header>
+  <main>
+    <section id="submission">
+      <h2>Submit a New Gemini Response</h2>
+      <form id="contribution-form">
+        <label>
+          Your Name:
+          <input type="text" id="contributor" required />
+        </label>
+        <label>
+          Prompt:
+          <textarea id="prompt" rows="4" required></textarea>
+        </label>
+        <label>
+          Output DOCX:
+          <input type="file" id="docx-file" accept=".docx" required />
+        </label>
+        <button type="submit" id="submit-btn">Submit</button>
+      </form>
+      <p id="form-status"></p>
+    </section>
+    <hr />
+    <section id="gallery">
+      <h2>All Contributions</h2>
+      <div id="contributions-list">Loading...</div>
+    </section>
+  </main>
+  <script src="script.js"></script>
 </body>
 </html>
