@@ -7,7 +7,10 @@ export async function GET() {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('Supabase error:', error); // Add this line
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   // Convert storage paths into public URLs
   const withUrls = data.map(item => ({
