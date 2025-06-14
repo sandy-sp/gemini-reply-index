@@ -1,0 +1,8 @@
+{
+  "name": "gemini-reply-index",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
