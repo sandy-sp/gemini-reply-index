@@ -1,7 +1,0 @@
-{
-  "projects": {
-    "buildCommand": "npm run build",
-    "outputDirectory": "apps/frontend/.next"
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
-}
