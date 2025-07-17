@@ -1,26 +1,56 @@
 const pool = require('../config/db');
+const { Storage } = require('@google-cloud/storage');
+const path = require('path');
+const { format } = require('util');
 
-// @desc    Create a new post
+// Configure Google Cloud Storage
+const storage = new Storage();
+const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
+
+// @desc    Create a new post with a file upload
 // @route   POST /api/posts
 // @access  Private
 const createPost = async (req, res) => {
-    const { topic_title, focus_area, prompt, output_text, keywords, notes } = req.body;
-    if (!topic_title || !prompt) {
-        return res.status(400).json({ message: 'Please provide a topic title and a prompt.' });
+    const { topic_title, focus_area, prompt, keywords, notes } = req.body;
+
+    if (!req.file) {
+        return res.status(400).json({ message: 'Please upload a document file.' });
     }
-    try {
-        const newPostQuery = `
-            INSERT INTO posts (user_id, topic_title, focus_area, prompt, output_text, keywords, notes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING *;
-        `;
-        const values = [req.user.user_id, topic_title, focus_area, prompt, output_text, keywords, notes];
-        const newPost = await pool.query(newPostQuery, values);
-        res.status(201).json(newPost.rows[0]);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error while creating post.' });
-    }
+
+    const blob = bucket.file(Date.now() + path.extname(req.file.originalname));
+    const blobStream = blob.createWriteStream({
+        resumable: false,
+    });
+
+    blobStream.on('error', (err) => {
+        res.status(500).json({ message: err.message });
+    });
+
+    blobStream.on('finish', async () => {
+        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+
+        try {
+            // ++ THE FIX IS HERE ++
+            // Convert the comma-separated keywords string into a PostgreSQL array literal.
+            // e.g., "ai,tech" becomes "{ai,tech}"
+            const keywordsForDb = `{${keywords}}`;
+
+            const newPostQuery = `
+                INSERT INTO posts (user_id, topic_title, focus_area, prompt, keywords, notes, file_url)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING *;
+            `;
+            // Use the newly formatted keywordsForDb variable in the query
+            const values = [req.user.user_id, topic_title, focus_area, prompt, keywordsForDb, notes, publicUrl];
+            const newPost = await pool.query(newPostQuery, values);
+            res.status(201).json(newPost.rows[0]);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error while saving post to database.' });
+        }
+    });
+
+    blobStream.end(req.file.buffer);
 };
 
 // @desc    Get all posts

@@ -49,6 +49,10 @@ const PostDetailPage = () => {
             {/* --- Buttons for post owner --- */}
             {user && user.id === post.user_id && (
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 1 }}>
+                    {/* ++ ADD THIS EDIT BUTTON ++ */}
+                    <Button component={RouterLink} to={`/posts/${post.post_id}/edit`} variant="contained">
+                        Edit
+                    </Button>
                     <Button variant="contained" color="error" onClick={handleDelete}>
                         Delete
                     </Button>
@@ -75,9 +79,14 @@ const PostDetailPage = () => {
 
             <Box sx={{ my: 4 }}>
                 <Typography variant="h5" gutterBottom>Output / Document</Typography>
-                <Typography sx={{ whiteSpace: 'pre-wrap' }}>
-                    {post.output_text}
-                </Typography>
+                <Button 
+                    variant="contained" 
+                    href={post.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                >
+                    View Document
+                </Button>
             </Box>
 
             <Button component={RouterLink} to="/posts" variant="outlined">

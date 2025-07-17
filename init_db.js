@@ -1,41 +1,28 @@
 const pool = require('./src/config/db');
 
-const createTables = async () => {
-    const usersTableQuery = `
-        CREATE TABLE IF NOT EXISTS users (
-            user_id SERIAL PRIMARY KEY,
-            username VARCHAR(50) UNIQUE NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-    `;
-
-    const postsTableQuery = `
-        CREATE TABLE IF NOT EXISTS posts (
-            post_id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-            topic_title VARCHAR(255) NOT NULL,
-            focus_area VARCHAR(255),
-            prompt TEXT NOT NULL,
-            output_text TEXT,
-            keywords TEXT[],
-            notes TEXT,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-    `;
-
+const migrateDatabase = async () => {
+    const client = await pool.connect();
     try {
-        await pool.query(usersTableQuery);
-        console.log('"users" table ready.');
-        await pool.query(postsTableQuery);
-        console.log('"posts" table ready.');
+        console.log('Starting database migration...');
+
+        // Drop the old output_text column if it exists
+        await client.query('ALTER TABLE posts DROP COLUMN IF EXISTS output_text;');
+        console.log('Column "output_text" dropped or did not exist.');
+
+        // Add the new file_url column if it doesn't exist
+        await client.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS file_url VARCHAR(2048);');
+        console.log('Column "file_url" added or already exists.');
+
+        console.log('Database migration completed successfully.');
+
     } catch (error) {
-        console.error('Error creating tables:', error);
+        console.error('Error during database migration:', error);
     } finally {
+        // Release the client back to the pool
+        client.release();
+        // End the pool completely
         pool.end();
     }
 };
 
-createTables();
+migrateDatabase();

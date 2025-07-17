@@ -8,15 +8,27 @@ const getPosts = async () => {
   return response.data;
 };
 
+// Create a new post (now sends FormData)
+const createPost = async (formData, token) => {
+  const config = {
+    headers: {
+      'Content-Type': 'multipart/form-data', // This is important for file uploads
+      Authorization: `Bearer ${token}`,
+    },
+  };
+  const response = await axios.post(API_URL, formData, config);
+  return response.data;
+};
+
 // ++ ADD THIS FUNCTION ++
-// Create a new post
-const createPost = async (postData, token) => {
+// Update a user's post
+const updatePost = async (postId, postData, token) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
-  const response = await axios.post(API_URL, postData, config);
+  const response = await axios.put(API_URL + postId, postData, config);
   return response.data;
 };
 
@@ -44,6 +56,7 @@ const postService = {
   getPosts,
   createPost,
   getPostById,
+  updatePost,
   deletePost, // ++ ADD TO EXPORTS ++
 };
 
