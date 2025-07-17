@@ -49,7 +49,14 @@ const createPost = async (req, res) => {
 // @desc    Get all posts
 const getPosts = async (req, res) => {
     try {
-        const allPostsQuery = 'SELECT * FROM posts ORDER BY created_at DESC';
+        // This query now joins the posts and likes tables and counts the likes for each post.
+        const allPostsQuery = `
+            SELECT p.*, COUNT(l.like_id) AS like_count
+            FROM posts p
+            LEFT JOIN likes l ON p.post_id = l.post_id
+            GROUP BY p.post_id
+            ORDER BY p.created_at DESC;
+        `;
         const allPosts = await pool.query(allPostsQuery);
         res.status(200).json(allPosts.rows);
     } catch (error) {
@@ -62,14 +69,35 @@ const getPosts = async (req, res) => {
 const getPostById = async (req, res) => {
     try {
         const { id } = req.params;
-        const postQuery = 'SELECT * FROM posts WHERE post_id = $1';
-        const post = await pool.query(postQuery, [id]);
+        // The user ID is optional. If the user is not logged in, we can still fetch the post.
+        const userId = req.user?.user_id;
+
+        // This query now gets the post, its like count, and a boolean indicating
+        // if the current user (if logged in) has liked it.
+        const postQuery = `
+            SELECT
+                p.*,
+                COUNT(l.like_id)::int AS like_count,
+                EXISTS(SELECT 1 FROM likes WHERE post_id = p.post_id AND user_id = $2) AS user_has_liked
+            FROM
+                posts p
+            LEFT JOIN
+                likes l ON p.post_id = l.post_id
+            WHERE
+                p.post_id = $1
+            GROUP BY
+                p.post_id;
+        `;
+
+        const post = await pool.query(postQuery, [id, userId]);
+
         if (post.rows.length === 0) {
             return res.status(404).json({ message: 'Post not found.' });
         }
+
         res.status(200).json(post.rows[0]);
     } catch (error) {
-        console.error(error);
+        console.error('Error in getPostById controller:', error);
         res.status(500).json({ message: 'Server error while getting post.' });
     }
 };
@@ -146,11 +174,41 @@ const getMyPosts = async (req, res) => {
     }
 };
 
+// @desc    Like or unlike a post
+// @route   POST /api/posts/:id/like
+// @access  Private
+const likePost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const userId = req.user.user_id;
+
+        // Check if the like already exists
+        const likeQuery = 'SELECT * FROM likes WHERE user_id = $1 AND post_id = $2';
+        const existingLike = await pool.query(likeQuery, [userId, postId]);
+
+        if (existingLike.rows.length > 0) {
+            // If it exists, unlike the post (delete the row)
+            const deleteLikeQuery = 'DELETE FROM likes WHERE user_id = $1 AND post_id = $2';
+            await pool.query(deleteLikeQuery, [userId, postId]);
+            res.status(200).json({ message: 'Post unliked successfully.' });
+        } else {
+            // If it doesn't exist, like the post (insert a new row)
+            const addLikeQuery = 'INSERT INTO likes (user_id, post_id) VALUES ($1, $2)';
+            await pool.query(addLikeQuery, [userId, postId]);
+            res.status(200).json({ message: 'Post liked successfully.' });
+        }
+    } catch (error) {
+        console.error('Error in likePost controller:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     createPost,
     getPosts,
     getPostById,
     updatePost,
     deletePost,
-    getMyPosts
+    getMyPosts,
+    likePost
 };

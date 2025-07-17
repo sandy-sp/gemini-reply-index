@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 // VVV The fix is on this line VVV
-const { createPost, getPosts, getPostById, updatePost, deletePost, getMyPosts } = require('../controllers/postController');
+const { createPost, getPosts, getPostById, updatePost, deletePost, getMyPosts, likePost } = require('../controllers/postController');
 const { protect } = require('../middleware/authMiddleware');
 
 // Configure multer for in-memory file storage
@@ -26,5 +26,8 @@ router.route('/:id')
   .get(getPostById)
   .put(protect, updatePost)
   .delete(protect, deletePost);
+
+// This is the new route for liking a post
+router.route('/:id/like').post(protect, likePost);
 
 module.exports = router;

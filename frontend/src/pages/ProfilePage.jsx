@@ -1,8 +1,9 @@
 import { useState, useEffect, useContext } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Grid } from '@mui/material'; // ++ IMPORT Grid ++
+import { Link as RouterLink } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import postService from '../services/postService';
-import PostItem from '../components/PostItem'; // We can reuse this component!
+import ProfilePostCard from '../components/ProfilePostCard'; // ++ USE THE NEW CARD ++
 
 const ProfilePage = () => {
   const [posts, setPosts] = useState([]);
@@ -10,6 +11,7 @@ const ProfilePage = () => {
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
+    // ... useEffect hook is unchanged
     const fetchUserPosts = async () => {
       try {
         const data = await postService.getMyPosts(user.token);
@@ -26,24 +28,37 @@ const ProfilePage = () => {
     }
   }, [user?.token]);
 
+
   if (loading) {
     return <CircularProgress />;
   }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        My Profile
-      </Typography>
+      {/* --- User Info and Create Button (Unchanged) --- */}
+      <Typography variant="h4" gutterBottom>My Profile</Typography>
       <Typography variant="h6">Username: {user.username}</Typography>
-      <Typography variant="h6" sx={{mb: 4}}>Email: {user.email}</Typography>
+      <Typography variant="h6" sx={{mb: 2}}>Email: {user.email}</Typography>
+      <Button component={RouterLink} to="/create" variant="contained" color="primary" sx={{ mb: 4 }}>
+        Create New Post
+      </Button>
 
       <Typography variant="h5" gutterBottom>My Posts</Typography>
-      {posts.length > 0 ? (
-        posts.map((post) => <PostItem key={post.post_id} post={post} />)
-      ) : (
-        <Typography>You have not created any posts yet.</Typography>
-      )}
+
+      {/* ++ USE A GRID CONTAINER FOR POSTS ++ */}
+      <Grid container spacing={2}>
+        {posts.length > 0 ? (
+          posts.map((post) => (
+            <Grid item key={post.post_id} xs={12} sm={6} md={4}>
+              <ProfilePostCard post={post} />
+            </Grid>
+          ))
+        ) : (
+          <Grid item xs={12}>
+            <Typography>You have not created any posts yet.</Typography>
+          </Grid>
+        )}
+      </Grid>
     </Box>
   );
 };

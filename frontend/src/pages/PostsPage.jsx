@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Box, Typography } from '@mui/material';
 import postService from '../services/postService';
 import PostItem from '../components/PostItem';
 
@@ -25,9 +24,6 @@ const HomePage = () => {
       <Typography variant="h4" gutterBottom>
         Gemini Reply Index
       </Typography>
-      <Button component={RouterLink} to="/create" variant="contained" color="primary" sx={{ mb: 2 }}>
-        Create New Post
-      </Button>
       <Box>
         {posts.length > 0 ? (
           posts.map((post) => <PostItem key={post.post_id} post={post} />)

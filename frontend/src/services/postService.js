@@ -63,13 +63,27 @@ const getMyPosts = async (token) => {
   return response.data;
 };
 
+// ++ ADD THIS FUNCTION ++
+// Like or unlike a post
+const likePost = async (postId, token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+  // We send an empty body for this POST request
+  const response = await axios.post(API_URL + postId + '/like', {}, config);
+  return response.data;
+};
+
 const postService = {
   getPosts,
   createPost,
   getPostById,
   updatePost,
   deletePost,
-  getMyPosts 
+  getMyPosts,
+  likePost
 };
 
 export default postService;
