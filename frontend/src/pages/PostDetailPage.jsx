@@ -9,7 +9,7 @@ const PostDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useContext(AuthContext); // Get the logged-in user
+    const { user } = useContext(AuthContext);
 
     useEffect(() => {
         const fetchPost = async () => {
@@ -46,10 +46,8 @@ const PostDetailPage = () => {
 
     return (
         <Paper sx={{ p: 3 }}>
-            {/* --- Buttons for post owner --- */}
             {user && user.id === post.user_id && (
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 1 }}>
-                    {/* ++ ADD THIS EDIT BUTTON ++ */}
                     <Button component={RouterLink} to={`/posts/${post.post_id}/edit`} variant="contained">
                         Edit
                     </Button>
@@ -59,7 +57,6 @@ const PostDetailPage = () => {
                 </Box>
             )}
 
-            {/* --- Post Content --- */}
             <Typography variant="h3" component="h1" gutterBottom>
                 {post.topic_title}
             </Typography>
@@ -89,7 +86,7 @@ const PostDetailPage = () => {
                 </Button>
             </Box>
 
-            <Button component={RouterLink} to="/posts" variant="outlined">
+             <Button component={RouterLink} to="/posts" variant="outlined">
                 Back to All Posts
             </Button>
         </Paper>

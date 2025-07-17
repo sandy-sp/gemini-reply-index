@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { createPost, getPosts, getPostById, updatePost, deletePost } = require('../controllers/postController');
+// VVV The fix is on this line VVV
+const { createPost, getPosts, getPostById, updatePost, deletePost, getMyPosts } = require('../controllers/postController');
 const { protect } = require('../middleware/authMiddleware');
 
 // Configure multer for in-memory file storage
@@ -14,8 +15,11 @@ const upload = multer({
 
 // /api/posts
 router.route('/')
-  .post(protect, upload.single('output_file'), createPost) // Use multer middleware here
+  .post(protect, upload.single('output_file'), createPost)
   .get(getPosts);
+
+// This must come BEFORE the '/:id' route
+router.get('/myposts', protect, getMyPosts);
 
 // /api/posts/:id
 router.route('/:id')

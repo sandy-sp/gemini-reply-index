@@ -38,7 +38,6 @@ const loginUser = async (req, res) => {
     }
 
     try {
-        // Check if user exists
         const userQuery = 'SELECT * FROM users WHERE email = $1';
         const result = await pool.query(userQuery, [email]);
         const user = result.rows[0];
@@ -47,13 +46,11 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
 
-        // Check if password is correct
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
 
-        // User is valid, create JWT
         const payload = {
             user: {
                 id: user.user_id,
@@ -63,10 +60,11 @@ const loginUser = async (req, res) => {
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }, // Token expires in 1 day
+            { expiresIn: '1d' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                // Corrected line sends both token and user ID
+                res.json({ token, id: user.user_id });
             }
         );
 

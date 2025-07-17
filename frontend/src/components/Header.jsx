@@ -1,10 +1,10 @@
-import { useContext } from 'react'; // ++ IMPORT ++
+import { useContext } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import AuthContext from '../context/AuthContext'; // ++ IMPORT ++
+import AuthContext from '../context/AuthContext';
 
 const Header = () => {
-  const { user, logout } = useContext(AuthContext); // ++ USE CONTEXT ++
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const onLogout = () => {
@@ -21,10 +21,19 @@ const Header = () => {
           </RouterLink>
         </Typography>
         <Box>
-          {user ? ( // ++ CONDITIONAL LOGIC ++
-            <Button color="inherit" onClick={onLogout}>
-              Logout
-            </Button>
+          {user ? (
+            <>
+              {/* ++ ADD THIS BUTTON FOR POSTS NAVIGATION ++ */}
+              <Button color="inherit" component={RouterLink} to="/profile">
+                Profile
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/posts">
+                Posts
+              </Button>
+              <Button color="inherit" onClick={onLogout}>
+                Logout
+              </Button>
+            </>
           ) : (
             <>
               <Button color="inherit" component={RouterLink} to="/login">

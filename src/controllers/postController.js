@@ -8,8 +8,6 @@ const storage = new Storage();
 const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
 
 // @desc    Create a new post with a file upload
-// @route   POST /api/posts
-// @access  Private
 const createPost = async (req, res) => {
     const { topic_title, focus_area, prompt, keywords, notes } = req.body;
 
@@ -28,11 +26,7 @@ const createPost = async (req, res) => {
 
     blobStream.on('finish', async () => {
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-
         try {
-            // ++ THE FIX IS HERE ++
-            // Convert the comma-separated keywords string into a PostgreSQL array literal.
-            // e.g., "ai,tech" becomes "{ai,tech}"
             const keywordsForDb = `{${keywords}}`;
 
             const newPostQuery = `
@@ -40,7 +34,6 @@ const createPost = async (req, res) => {
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING *;
             `;
-            // Use the newly formatted keywordsForDb variable in the query
             const values = [req.user.user_id, topic_title, focus_area, prompt, keywordsForDb, notes, publicUrl];
             const newPost = await pool.query(newPostQuery, values);
             res.status(201).json(newPost.rows[0]);
@@ -54,8 +47,6 @@ const createPost = async (req, res) => {
 };
 
 // @desc    Get all posts
-// @route   GET /api/posts
-// @access  Public
 const getPosts = async (req, res) => {
     try {
         const allPostsQuery = 'SELECT * FROM posts ORDER BY created_at DESC';
@@ -68,14 +59,11 @@ const getPosts = async (req, res) => {
 };
 
 // @desc    Get a single post by ID
-// @route   GET /api/posts/:id
-// @access  Public
 const getPostById = async (req, res) => {
     try {
         const { id } = req.params;
         const postQuery = 'SELECT * FROM posts WHERE post_id = $1';
         const post = await pool.query(postQuery, [id]);
-
         if (post.rows.length === 0) {
             return res.status(404).json({ message: 'Post not found.' });
         }
@@ -87,44 +75,36 @@ const getPostById = async (req, res) => {
 };
 
 // @desc    Update a post
-// @route   PUT /api/posts/:id
-// @access  Private
 const updatePost = async (req, res) => {
     try {
         const { id } = req.params;
-        // Get all possible fields from the body for a full update
-        const { topic_title, focus_area, prompt, output_text, keywords, notes } = req.body;
+        const { topic_title, focus_area, prompt, keywords, notes } = req.body;
 
         const postResult = await pool.query('SELECT user_id FROM posts WHERE post_id = $1', [id]);
-
         if (postResult.rows.length === 0) {
             return res.status(404).json({ message: 'Post not found.' });
         }
 
         const post = postResult.rows[0];
-
         if (post.user_id !== req.user.user_id) {
             return res.status(403).json({ message: 'User not authorized to update this post.' });
         }
-
+        
+        const keywordsForDb = `{${keywords}}`;
         const updateQuery = `
             UPDATE posts 
             SET 
                 topic_title = $1, 
                 focus_area = $2,
                 prompt = $3,
-                output_text = $4,
-                keywords = $5,
-                notes = $6,
+                keywords = $4,
+                notes = $5,
                 updated_at = CURRENT_TIMESTAMP 
-            WHERE post_id = $7 
+            WHERE post_id = $6 
             RETURNING *`;
-
-        const values = [topic_title, focus_area, prompt, output_text, keywords, notes, id];
+        const values = [topic_title, focus_area, prompt, keywordsForDb, notes, id];
         const updatedPost = await pool.query(updateQuery, values);
-
         res.status(200).json(updatedPost.rows[0]);
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error while updating post.' });
@@ -132,28 +112,37 @@ const updatePost = async (req, res) => {
 };
 
 // @desc    Delete a post
-// @route   DELETE /api/posts/:id
-// @access  Private
 const deletePost = async (req, res) => {
     try {
         const { id } = req.params;
         const postResult = await pool.query('SELECT user_id FROM posts WHERE post_id = $1', [id]);
-
         if (postResult.rows.length === 0) {
             return res.status(404).json({ message: 'Post not found.' });
         }
-
         const post = postResult.rows[0];
-
         if (post.user_id !== req.user.user_id) {
             return res.status(403).json({ message: 'User not authorized to delete this post.' });
         }
-
         await pool.query('DELETE FROM posts WHERE post_id = $1', [id]);
         res.status(200).json({ message: 'Post removed successfully.', post_id: id });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error while deleting post.' });
+    }
+};
+
+// @desc    Get logged in user's posts
+// @route   GET /api/posts/myposts
+// @access  Private
+const getMyPosts = async (req, res) => {
+    try {
+        // req.user.user_id is available thanks to our 'protect' middleware
+        const userPostsQuery = 'SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC';
+        const userPosts = await pool.query(userPostsQuery, [req.user.user_id]);
+        res.status(200).json(userPosts.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error while getting user posts.' });
     }
 };
 
@@ -163,4 +152,5 @@ module.exports = {
     getPostById,
     updatePost,
     deletePost,
+    getMyPosts
 };

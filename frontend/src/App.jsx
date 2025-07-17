@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage';
 import CreatePostPage from './pages/CreatePostPage'; // ++ ADD THIS IMPORT ++
 import PostDetailPage from './pages/PostDetailPage'; // ++ ADD THIS IMPORT ++
 import EditPostPage from './pages/EditPostPage'; // ++ ADD THIS IMPORT ++
+import ProfilePage from './pages/ProfilePage';
 import { Container } from '@mui/material';
 
 // -- DELETE THE OLD PLACEHOLDER LINE THAT WAS HERE --
@@ -25,6 +26,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/posts/:id" element={<PostDetailPage />} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
             {/* Protected Routes */}
             <Route

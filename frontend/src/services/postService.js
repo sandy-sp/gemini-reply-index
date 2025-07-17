@@ -51,13 +51,25 @@ const deletePost = async (postId, token) => {
   return response.data;
 };
 
+// ++ ADD THIS FUNCTION ++
+// Get posts for logged in user
+const getMyPosts = async (token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+  const response = await axios.get(API_URL + 'myposts', config);
+  return response.data;
+};
 
 const postService = {
   getPosts,
   createPost,
   getPostById,
   updatePost,
-  deletePost, // ++ ADD TO EXPORTS ++
+  deletePost,
+  getMyPosts 
 };
 
 export default postService;
